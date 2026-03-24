@@ -1,0 +1,147 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { questions } from '../data/questions';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function QuizState({ launchConfetti, clearConfetti, onComplete }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [renderedQuestions, setRenderedQuestions] = useState([0]);
+  const [completedSet, setCompletedSet] = useState(new Set());
+  const [results, setResults] = useState({});
+  const inputRefs = useRef({});
+  const containerRef = useRef(null);
+  const blockRefs = useRef({});
+
+  const getInputCount = (q) => {
+    if (q.type === 'single') return 1;
+    if (q.type === 'double') return 2;
+    if (q.type === 'triple') return 3;
+    return 1;
+  };
+
+  // Auto-scroll to latest question
+  useEffect(() => {
+    const latestIdx = renderedQuestions[renderedQuestions.length - 1];
+    const q = questions[latestIdx];
+    if (q && blockRefs.current[q.id]) {
+      setTimeout(() => {
+        blockRefs.current[q.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 600);
+    }
+  }, [renderedQuestions]);
+
+  const submitAnswer = useCallback((index) => {
+    const q = questions[index];
+    let isCorrect = false;
+
+    if (q.type === 'single') {
+      const val = inputRefs.current[`${q.id}-0`]?.value || '';
+      isCorrect = q.validate(val);
+    } else {
+      const count = q.type === 'double' ? 2 : 3;
+      const answers = [];
+      for (let i = 0; i < count; i++) {
+        answers.push(inputRefs.current[`${q.id}-${i}`]?.value || '');
+      }
+      isCorrect = q.validate(answers);
+    }
+
+    if (isCorrect) {
+      setResults(prev => ({ ...prev, [q.id]: { correct: true, msg: q.correctMsg } }));
+      setCompletedSet(prev => new Set([...prev, q.id]));
+      launchConfetti(q.confetti);
+
+      setTimeout(() => {
+        if (index < 4) {
+          const nextIdx = index + 1;
+          setRenderedQuestions(prev => [...prev, nextIdx]);
+          setCurrentIndex(nextIdx);
+        } else if (index === 4) {
+          setTimeout(() => {
+            // Show final question solo
+            setRenderedQuestions([5]);
+            setCurrentIndex(5);
+          }, 300);
+        } else if (index === 5) {
+          setTimeout(() => onComplete(), 1500);
+        }
+      }, 1200);
+    } else {
+      setResults(prev => ({ ...prev, [q.id]: { correct: false, msg: q.wrongMsg } }));
+      // Shake the question block
+      const block = blockRefs.current[q.id];
+      if (block) {
+        block.style.animation = 'none';
+        block.offsetHeight;
+        block.style.animation = 'shake 0.4s ease';
+      }
+    }
+  }, [launchConfetti, clearConfetti, onComplete]);
+
+  const progress = (completedSet.size / questions.length) * 100;
+
+  return (
+    <div className="glass-card quiz-card" ref={containerRef}>
+      <p className="quiz-intro">Ok lets take a test then... 📝</p>
+      <h2 className="quiz-title">With answers only my sweet girl would know..</h2>
+      <div className="divider-line" />
+
+      {/* Question blocks */}
+      <AnimatePresence>
+      {renderedQuestions.map((qIdx) => {
+        const q = questions[qIdx];
+        if (!q) return null;
+        const result = results[q.id];
+        const isCompleted = completedSet.has(q.id);
+        const inputCount = getInputCount(q);
+
+        return (
+          <motion.div
+            key={q.id}
+            ref={(el) => { blockRefs.current[q.id] = el; }}
+            className={`question-block ${isCompleted ? 'completed' : ''} ${q.isFinal ? 'final-question' : ''}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }}
+          >
+            <div style={{ marginBottom: 10, textAlign: q.id === 6 ? 'center' : 'left' }}>
+              {q.id !== 6 && <span className="q-number">{q.id}</span>}
+              <span className="q-text">{q.text}</span>
+            </div>
+            {q.hint && <p className="q-hint">{q.hint}</p>}
+            <div className="answer-row">
+              {Array.from({ length: inputCount }).map((_, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { inputRefs.current[`${q.id}-${i}`] = el; }}
+                  type="text"
+                  className="answer-input"
+                  placeholder={q.type === 'single' ? q.placeholder : q.placeholders[i]}
+                  autoComplete="off"
+                  disabled={isCompleted}
+                  onKeyDown={(e) => e.key === 'Enter' && submitAnswer(qIdx)}
+                />
+              ))}
+              <button
+                className="btn btn-submit"
+                onClick={() => submitAnswer(qIdx)}
+                disabled={isCompleted}
+              >
+                Submit
+              </button>
+              {result && (
+                <span className={`result-icon ${result.correct ? 'correct' : ''}`}>
+                  {result.correct ? '❤️' : '⚠️'}
+                </span>
+              )}
+            </div>
+            {result && (
+              <p className={`result-msg ${result.correct ? 'correct' : 'wrong'}`}>
+                {result.msg}
+              </p>
+            )}
+          </motion.div>
+        );
+      })}
+      </AnimatePresence>
+    </div>
+  );
+}

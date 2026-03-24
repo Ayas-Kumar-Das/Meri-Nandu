@@ -1,0 +1,4 @@
+PLACE YOUR MUSIC FILE IN THIS FOLDER
+
+1. Add your audio file here (e.g., 'my_song.mp3')
+2. Open 'src/data/media.js' and update the 'carouselMusic' variable with your new filename.
