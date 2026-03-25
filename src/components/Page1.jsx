@@ -15,37 +15,52 @@ export default function Page1({
 }) {
   const [codeError, setCodeError] = useState(false);
   const codeInputRef = useRef(null);
+  // 🔹 Page1 opened (fires once) + time tracking
   useEffect(() => {
-  if (!window.gtag) return;
+    if (!window.gtag) return;
+    window.gtag('event', 'page_view', { page_title: 'Page 1 - Welcome' });
 
-  // 🔹 Page1 opened
-  window.gtag('event', 'page_view', {
-    page_title: 'page1'
-  });
+    const startTime = Date.now();
+    return () => {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      window.gtag('event', 'Page 1 - Time Spent', { value: timeSpent });
+    };
+  }, []);
 
-  // 🔹 Track current state
-  window.gtag('event', 'state_view_page1', {
-    state: currentState
-  });
+  // 🔹 Track every screen the user sees on Page 1
+  useEffect(() => {
+    if (!window.gtag) return;
 
-}, []);
-useEffect(() => {
-  if (!window.gtag) return;
+    const screenNames = {
+      'welcome': 'Welcome Screen',
+      'confirm': 'Are You Sure Screen',
+      'intruder': 'Intruder Alert Screen',
+      'why': 'Why Screen',
+      'quiz': 'Quiz Started',
+      'teddy': 'Teddy Animation (After Quiz)',
+      'teddy-quick': 'Teddy Animation (Code Shortcut)',
+    };
 
-  window.gtag('event', 'state_change_page1', {
-    state: currentState
-  });
+    window.gtag('event', 'Page 1 - Screen Changed', {
+      screen_name: screenNames[currentState] || currentState
+    });
+  }, [currentState]);
 
-}, [currentState]);
+  // 🔹 Helper to track button clicks
+  const trackClick = (label) => {
+    if (window.gtag) window.gtag('event', 'Page 1 - Button Clicked', { button_name: label });
+  };
 
   const checkSpecialCode = useCallback(() => {
     const val = codeInputRef.current?.value || '';
     const normalized = val.toLowerCase().replace(/\s+/g, '');
     if (normalized === 'subhyasforever') {
       setCodeError(false);
+      trackClick('Secret Code - Correct');
       setCurrentState('teddy-quick');
     } else {
       setCodeError(true);
+      trackClick('Secret Code - Wrong Attempt');
     }
   }, [setCurrentState]);
 
@@ -81,8 +96,8 @@ useEffect(() => {
           <div className="divider-line" />
           <h2 className="question-heading">Are You My Baby?</h2>
           <div className="btn-group">
-            <button className="btn btn-yes" onClick={() => setCurrentState('confirm')}>Yes 💕</button>
-            <button className="btn btn-no" onClick={() => setCurrentState('intruder')}>No</button>
+            <button className="btn btn-yes" onClick={() => { trackClick('Yes I Am Your Baby'); setCurrentState('confirm'); }}>Yes 💕</button>
+            <button className="btn btn-no" onClick={() => { trackClick('No - Not Your Baby'); setCurrentState('intruder'); }}>No</button>
           </div>
           <div className="code-section">
             <p className="code-label">Already visited? Enter the special code 🔑</p>
@@ -121,8 +136,8 @@ useEffect(() => {
           <div className="big-emoji">🥺</div>
           <h2 className="question-heading">Are you sure?</h2>
           <div className="btn-group">
-            <button className="btn btn-yes" onClick={() => setCurrentState('quiz')}>Yes, I am! 💖</button>
-            <button className="btn btn-no" onClick={() => setCurrentState('why')}>No...</button>
+            <button className="btn btn-yes" onClick={() => { trackClick('Yes I Am Sure'); setCurrentState('quiz'); }}>Yes, I am! 💖</button>
+            <button className="btn btn-no" onClick={() => { trackClick('No - Not Sure'); setCurrentState('why'); }}>No...</button>
           </div>
         </div>
       </motion.section>
@@ -143,7 +158,7 @@ useEffect(() => {
           <div className="big-emoji">🚨</div>
           <h2 className="alert-heading">Intruder Alert!</h2>
           <p className="state-message">Only the cutest girl in the world allowed ⚠️</p>
-          <button className="btn btn-back-page1" onClick={() => setCurrentState('welcome')}>Go Back 🔙</button>
+          <button className="btn btn-back-page1" onClick={() => { trackClick('Go Back from Intruder'); setCurrentState('welcome'); }}>Go Back 🔙</button>
         </div>
       </motion.section>
     );
@@ -162,7 +177,7 @@ useEffect(() => {
         <div className="glass-card">
           <div className="big-emoji">🤨</div>
           <p className="state-message large">Why did you even click yes at the first place?</p>
-          <button className="btn btn-back-page1" onClick={() => setCurrentState('welcome')}>Go Back 🔙</button>
+          <button className="btn btn-back-page1" onClick={() => { trackClick('Go Back from Why'); setCurrentState('welcome'); }}>Go Back 🔙</button>
         </div>
       </motion.section>
     );

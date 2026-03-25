@@ -5,46 +5,52 @@ import { mainPhotos } from '../data/media';
 export default function Page2({ visible, isPulling, onGoNext }) {
   const [selectedImage, setSelectedImage] = useState(null);
   useEffect(() => {
-  if (!window.gtag || !visible) return;
+    if (!window.gtag || !visible) return;
 
-  // 🔹 Page view
-  window.gtag('event', 'page_view', {
-    page_title: 'page2'
-  });
+    // 🔹 Page opened
+    window.gtag('event', 'page_view', { page_title: 'Page 2 - Love Letter' });
+    window.gtag('event', 'Page 2 - Opened');
 
-  // 🔹 Entry
-  window.gtag('event', 'entered_page2');
+    const startTime = Date.now();
 
-  const startTime = Date.now();
+    // 🔹 Scroll tracking (each fires ONLY ONCE)
+    let scrolledPast25 = false;
+    let scrolledPast50 = false;
+    let scrolledPast75 = false;
+    let scrolledPast100 = false;
 
-  let maxScroll = 0;
+    const handleScroll = () => {
+      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+      if (scrollableHeight <= 0) return;
 
-  const handleScroll = () => {
-    const scroll = Math.round(
-      (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
-    );
+      const scroll = Math.round((window.scrollY / scrollableHeight) * 100);
 
-    if (scroll > maxScroll) {
-      maxScroll = scroll;
+      if (scroll > 25 && !scrolledPast25) {
+        scrolledPast25 = true;
+        window.gtag('event', 'Page 2 - Scrolled 25%');
+      }
+      if (scroll > 50 && !scrolledPast50) {
+        scrolledPast50 = true;
+        window.gtag('event', 'Page 2 - Scrolled 50%');
+      }
+      if (scroll > 75 && !scrolledPast75) {
+        scrolledPast75 = true;
+        window.gtag('event', 'Page 2 - Scrolled 75%');
+      }
+      if (scroll > 95 && !scrolledPast100) {
+        scrolledPast100 = true;
+        window.gtag('event', 'Page 2 - Reached Bottom');
+      }
+    };
 
-      if (scroll > 25) window.gtag('event', 'scroll_25_page2');
-      if (scroll > 50) window.gtag('event', 'scroll_50_page2');
-      if (scroll > 75) window.gtag('event', 'scroll_75_page2');
-    }
-  };
+    window.addEventListener('scroll', handleScroll);
 
-  window.addEventListener('scroll', handleScroll);
-
-  return () => {
-    const timeSpent = Math.round((Date.now() - startTime) / 1000);
-
-    window.gtag('event', 'time_spent_page2', {
-      value: timeSpent
-    });
-
-    window.removeEventListener('scroll', handleScroll);
-  };
-}, [visible]);
+    return () => {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      window.gtag('event', 'Page 2 - Time Spent', { value: timeSpent });
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [visible]);
   if (!visible && !isPulling) return null;
   const animateState = visible ? "visible" : "hidden";
 
@@ -101,11 +107,11 @@ export default function Page2({ visible, isPulling, onGoNext }) {
             style={{ marginTop: '80px' }}
             whileHover={{ scale: 1.1, zIndex: 50, rotate: 0 }}
             onClick={() => {
-  if (window.gtag) {
-    window.gtag('event', 'image_clicked_page2');
-  }
-  setSelectedImage(p);
-}}
+              if (window.gtag) {
+                window.gtag('event', 'Page 2 - Photo Clicked');
+              }
+              setSelectedImage(p);
+            }}
           >
             <div className="polaroid-clip" />
             <div className="polaroid-photo">
@@ -117,94 +123,97 @@ export default function Page2({ visible, isPulling, onGoNext }) {
 
       {/* Middle Content */}
       <div className="center-content" style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '800px', margin: '0 40px' }}>
-        <motion.div 
+        <motion.div
           className="dark-glass-box"
           variants={letterVariants}
           initial="hidden"
           animate={animateState}
           style={{ width: '100%' }}
         >
-        <div className="badge">WELCOME MY LOVE</div>
-        <h1 className="romantic-heading">Meri Nandu</h1>
-        
-        <div className="tiny-heart-divider">💕</div>
+          <div className="badge">WELCOME MY LOVE</div>
+          <h1 className="romantic-heading">Meri Nandu</h1>
 
-        <motion.div 
-          className="romantic-letter"
-          variants={textContainer}
-          initial="hidden"
-          animate={animateState}
-        >
-          <motion.p variants={textItem}>
-            So my dear Nandu, you finally landed on this page... Welcome welcome♥️ ... 
-            I made this page just for you to have a safe space of ours where our memories are loved and highlighted..
-          </motion.p>
-          <motion.p variants={textItem}>
-            Baby you are my everything... My heart, my soul, my life, my home... I can't express how much blessed I am to have you in life... You are everywhere... In my heart... In my mind... In my soul... In my life... In my dreams... Everywhere bas tum hi tum... Mo Megha Kadamba 😚... You are the fal of my acche karm...
-          </motion.p>
-          <motion.p variants={textItem}>
-            Baby I miss you so so so soo much... I wish you could be here by my side all the time 🥺, i wanna be your baby bear with you... After all the worldly chaos it's you whom I search for peace... Mera Sukoon tumse hai ♥️🧿...
-          </motion.p>
-          <motion.p variants={textItem}>
-            Sach kahun agar na baby meri life ka khoobsurat hissa tum ho... Tbh meri life hi tum ho♥️... Tumhari awaz ,tumhari hasi , tumhara daantna , your way of caring me... Everything about you is so special that mai ruk ke sochta hun that how I got so lucky to be blessed by God with such a beautiful loving woman... Uk I feel like to be God's favourite child for this🧿🙏🏻... You are not just another person to me baby... You are my home, my safe place jahan bina kisi darr ke , bina kisi bahar ki chinta ke I can just simply hug you tightly, keep my head on your chest and sleep while letting go of every worries 🫂
-          </motion.p>
-          <motion.p variants={textItem}>
-            Tum meri aadat nhi zaroorat ho... I can't live without you jaanu♥️... Tumhare saath bitaya har ek pal is everythingu for me... Ye jo udte firte ghumte photos dekh rhi ho na these are not just random memories... These define my life 🤌🏻🧿 ... These are not even the start... I want infinite memories with you like these and I want my full life with you... The future I imagine for myself is only with you holding your hands and we both helping each other grow and loving unconditionally 🌍... Mere din ka best part is feeling you in my heart and getting that comfort... Mere din ka pehla aour aakhri khayal tum (of course there is no pehla aakhri coz aap to sapne mai bhi rehti ho 😂😚♥️)
-          </motion.p>
-          <motion.p variants={textItem}>
-            My little marshmallow 🍡... We faced so many ups and downs together, fought every battle all with both laughter and tears.. Starting from WhatsApp chat to holding each other tightly we have came a long way and this should go till the end of life... I can't lose you baby 🤞🏻... My life is nothing with you sweetheart... Even in our old age I want nothing but you... Tumhe pyaar karna hai tumhe tang karna, hamare bacchon aour grandchildren ke saamne tumhe cheedna hai... Tumhara care paana hai tumhari daant sunni hai... My world revolves around you only sweetie✨
-          </motion.p>
-          <motion.p variants={textItem}>
-            Nandu, I will forever remain your baby bear 🐻... In every phase , in every situation I will love you , care for you , protect you and most importantly be by your side and never leaving you for a moment 🧿... But with all this I wanna say something more too... Ik I have made you sad many a times and hurt you in past and I am truly sorry for the tears you shed because of stupidity... For everytime I made you feel unheard or sad... I was dumb back then but I have learned... Tum mere liye sabse precious ho jaanu and I never want to be the reason behind your pain again... Keeping you happy and loved is my biggest goal in my life now...🧿
-          </motion.p>
-          <motion.p variants={textItem}>
-            Meri cute is chopsticks... I wanna give you my entire life and be the man you truly deserve ♾️... Har khushi mai tumhare saath naachna aour har mushkil waqt mai tumhara haath sabse kass ke pakadna... Ek din hamara pyara sa chota ghar hoga where I will live in our home along with my home jahan meri har subha tumse shuru hogi♥️🧿... I want to build a life with you where we love deeply, fight over silly things and then make up with warm long hugs and deep kisses... 😚 Ek aisi life jahan sirf tum, mai and hamara pyara sa sansaar 🧿
-          </motion.p>
-          <motion.p variants={textItem}>
-            And looking forward... I vow you a lifetime of love and happiness... Choosing you each and everyday ♥️... To understand you , feel you , annoy you , care you and love you each and every time I take a breath... You are my peace... My comfort... My happiness...<br/>
-            I am yours completely, honestly, forever ...
-          </motion.p>
-          <motion.p variants={textItem}>
-            I Love You So Much Beyond What Words Can Explain , How much I Love You How Will Be 100× more the very next second ♥️🧿✨... <br/>
-            My Home 🏡 ... Humesha meri hi rehna sweetie, aise hi mujhe daant te , samjhate aour pyaar karte rehna ✨
-          </motion.p>
-          <motion.p variants={textItem} className="signature">
-            Forever Yours -<br />
-            Tumhara Baby Bear 🐻♥️
-          </motion.p>
-        </motion.div>
-        
-        {/* Romantic Footer filling empty bottom space */}
-        <motion.div 
-          className="romantic-footer"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={visible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
-          transition={{ delay: 3, duration: 1.5 }}
-          style={{ marginTop: '60px', textAlign: 'center' }}
-        >
-          <div style={{ fontSize: '3rem', animation: 'heartLightPulse 3s infinite', color: '#ff8aab' }}>
-            ♾️
-          </div>
-          <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', color: '#fcf5f8', marginTop: '15px', fontStyle: 'italic', marginBottom: '40px' }}>
-            Forever & Always
-          </p>
-        </motion.div>
-      </motion.div>
+          <div className="tiny-heart-divider">💕</div>
 
-      <div className="page3-prompt" style={{ position: 'relative', zIndex: 60, marginTop: '30px', marginBottom: '100px', padding: '30px', background: 'rgba(255,107,138,0.1)', borderRadius: '20px', border: '1px solid rgba(255,138,171,0.3)', backdropFilter: 'blur(10px)', textAlign: 'center', width: '100%' }}>
-        <h3 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '1.8rem', marginBottom: '20px' }}>
-          So baby now I want to ask you a question...
-        </h3>
-        <motion.button 
-          className="btn btn-yes pulse-btn"
-          style={{ padding: '15px 50px', fontSize: '1.3rem', margin: '0 auto' }}
-          onClick={onGoNext}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Ok!
-        </motion.button>
-      </div>
+          <motion.div
+            className="romantic-letter"
+            variants={textContainer}
+            initial="hidden"
+            animate={animateState}
+          >
+            <motion.p variants={textItem}>
+              So my dear Nandu, you finally landed on this page... Welcome welcome♥️ ...
+              I made this page just for you to have a safe space of ours where our memories are loved and highlighted..
+            </motion.p>
+            <motion.p variants={textItem}>
+              Baby you are my everything... My heart, my soul, my life, my home... I can't express how much blessed I am to have you in life... You are everywhere... In my heart... In my mind... In my soul... In my life... In my dreams... Everywhere bas tum hi tum... Mo Megha Kadamba 😚... You are the fal of my acche karm...
+            </motion.p>
+            <motion.p variants={textItem}>
+              Baby I miss you so so so soo much... I wish you could be here by my side all the time 🥺, i wanna be your baby bear with you... After all the worldly chaos it's you whom I search for peace... Mera Sukoon tumse hai ♥️🧿...
+            </motion.p>
+            <motion.p variants={textItem}>
+              Sach kahun agar na baby meri life ka khoobsurat hissa tum ho... Tbh meri life hi tum ho♥️... Tumhari awaz ,tumhari hasi , tumhara daantna , your way of caring me... Everything about you is so special that mai ruk ke sochta hun that how I got so lucky to be blessed by God with such a beautiful loving woman... Uk I feel like to be God's favourite child for this🧿🙏🏻... You are not just another person to me baby... You are my home, my safe place jahan bina kisi darr ke , bina kisi bahar ki chinta ke I can just simply hug you tightly, keep my head on your chest and sleep while letting go of every worries 🫂
+            </motion.p>
+            <motion.p variants={textItem}>
+              Tum meri aadat nhi zaroorat ho... I can't live without you jaanu♥️... Tumhare saath bitaya har ek pal is everythingu for me... Ye jo udte firte ghumte photos dekh rhi ho na these are not just random memories... These define my life 🤌🏻🧿 ... These are not even the start... I want infinite memories with you like these and I want my full life with you... The future I imagine for myself is only with you holding your hands and we both helping each other grow and loving unconditionally 🌍... Mere din ka best part is feeling you in my heart and getting that comfort... Mere din ka pehla aour aakhri khayal tum (of course there is no pehla aakhri coz aap to sapne mai bhi rehti ho 😂😚♥️)
+            </motion.p>
+            <motion.p variants={textItem}>
+              My little marshmallow 🍡... We faced so many ups and downs together, fought every battle all with both laughter and tears.. Starting from WhatsApp chat to holding each other tightly we have came a long way and this should go till the end of life... I can't lose you baby 🤞🏻... My life is nothing with you sweetheart... Even in our old age I want nothing but you... Tumhe pyaar karna hai tumhe tang karna, hamare bacchon aour grandchildren ke saamne tumhe cheedna hai... Tumhara care paana hai tumhari daant sunni hai... My world revolves around you only sweetie✨
+            </motion.p>
+            <motion.p variants={textItem}>
+              Nandu, I will forever remain your baby bear 🐻... In every phase , in every situation I will love you , care for you , protect you and most importantly be by your side and never leaving you for a moment 🧿... But with all this I wanna say something more too... Ik I have made you sad many a times and hurt you in past and I am truly sorry for the tears you shed because of stupidity... For everytime I made you feel unheard or sad... I was dumb back then but I have learned... Tum mere liye sabse precious ho jaanu and I never want to be the reason behind your pain again... Keeping you happy and loved is my biggest goal in my life now...🧿
+            </motion.p>
+            <motion.p variants={textItem}>
+              Meri cute is chopsticks... I wanna give you my entire life and be the man you truly deserve ♾️... Har khushi mai tumhare saath naachna aour har mushkil waqt mai tumhara haath sabse kass ke pakadna... Ek din hamara pyara sa chota ghar hoga where I will live in our home along with my home jahan meri har subha tumse shuru hogi♥️🧿... I want to build a life with you where we love deeply, fight over silly things and then make up with warm long hugs and deep kisses... 😚 Ek aisi life jahan sirf tum, mai and hamara pyara sa sansaar 🧿
+            </motion.p>
+            <motion.p variants={textItem}>
+              And looking forward... I vow you a lifetime of love and happiness... Choosing you each and everyday ♥️... To understand you , feel you , annoy you , care you and love you each and every time I take a breath... You are my peace... My comfort... My happiness...<br />
+              I am yours completely, honestly, forever ...
+            </motion.p>
+            <motion.p variants={textItem}>
+              I Love You So Much Beyond What Words Can Explain , How much I Love You How Will Be 100× more the very next second ♥️🧿✨... <br />
+              My Home 🏡 ... Humesha meri hi rehna sweetie, aise hi mujhe daant te , samjhate aour pyaar karte rehna ✨
+            </motion.p>
+            <motion.p variants={textItem} className="signature">
+              Forever Yours -<br />
+              Tumhara Baby Bear 🐻♥️
+            </motion.p>
+          </motion.div>
+
+          {/* Romantic Footer filling empty bottom space */}
+          <motion.div
+            className="romantic-footer"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={visible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+            transition={{ delay: 3, duration: 1.5 }}
+            style={{ marginTop: '60px', textAlign: 'center' }}
+          >
+            <div style={{ fontSize: '3rem', animation: 'heartLightPulse 3s infinite', color: '#ff8aab' }}>
+              ♾️
+            </div>
+            <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', color: '#fcf5f8', marginTop: '15px', fontStyle: 'italic', marginBottom: '40px' }}>
+              Forever & Always
+            </p>
+          </motion.div>
+        </motion.div>
+
+        <div className="page3-prompt" style={{ position: 'relative', zIndex: 60, marginTop: '30px', marginBottom: '100px', padding: '30px', background: 'rgba(255,107,138,0.1)', borderRadius: '20px', border: '1px solid rgba(255,138,171,0.3)', backdropFilter: 'blur(10px)', textAlign: 'center', width: '100%' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '1.8rem', marginBottom: '20px' }}>
+            So baby now I want to ask you a question...
+          </h3>
+          <motion.button
+            className="btn btn-yes pulse-btn"
+            style={{ padding: '15px 50px', fontSize: '1.3rem', margin: '0 auto' }}
+            onClick={() => {
+              if (window.gtag) window.gtag('event', 'Page 2 - Clicked Ok to Go to Page 3');
+              onGoNext();
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Ok!
+          </motion.button>
+        </div>
       </div>
 
       {/* Right Wire & Polaroids */}
@@ -221,11 +230,11 @@ export default function Page2({ visible, isPulling, onGoNext }) {
             style={{ marginTop: '80px' }}
             whileHover={{ scale: 1.1, zIndex: 50, rotate: 0 }}
             onClick={() => {
-  if (window.gtag) {
-    window.gtag('event', 'image_clicked_page2');
-  }
-  setSelectedImage(p);
-}}
+              if (window.gtag) {
+                window.gtag('event', 'Page 2 - Photo Clicked');
+              }
+              setSelectedImage(p);
+            }}
           >
             <div className="polaroid-clip" />
             <div className="polaroid-photo">
@@ -243,7 +252,10 @@ export default function Page2({ visible, isPulling, onGoNext }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedImage(null)}
+            onClick={() => {
+            if (window.gtag) window.gtag('event', 'Page 2 - Photo Lightbox Closed');
+            setSelectedImage(null);
+          }}
           >
             <motion.div
               className="lightbox-content"

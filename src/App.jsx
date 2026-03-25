@@ -37,6 +37,12 @@ export default function App() {
     if (page > 1) {
       window.scrollTo(0, 0);
     }
+    if (window.gtag && page > 1) {
+      const pageNames = { 2: 'Page 2 - Love Letter', 3: 'Page 3 - Proposal' };
+      window.gtag('event', 'Navigation - Moved to Page', {
+        page_name: pageNames[page] || `Page ${page}`
+      });
+    }
   }, [page]);
 
   return (

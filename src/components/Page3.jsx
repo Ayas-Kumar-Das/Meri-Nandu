@@ -4,71 +4,67 @@ import { extraPhotos, finalVideo, carouselMusic } from '../data/media';
 
 export default function Page3({ visible, onGoBack }) {
   const [step, setStep] = useState(1);
+  // 🔹 Track which step the user is on inside Page 3
   useEffect(() => {
-  if (!window.gtag) return;
+    if (!window.gtag) return;
 
-  let pageName = "";
+    const stepNames = {
+      1: 'Proposal Question',
+      2: 'Celebration & Video',
+      3: 'Final Carousel & Message',
+    };
 
-  if (step === 1) pageName = "page1";
-  if (step === 2) pageName = "page2";
-  if (step === 3) pageName = "page3";
-
-  // 🔹 Track page view
-  window.gtag('event', 'page_view', {
-    page: pageName
-  });
-
-  // 🔹 Special: final page
-  if (step === 3) {
-    window.gtag('event', 'reached_final');
-  }
-
-}, [step]);
-useEffect(() => {
-  if (!window.gtag) return;
-
-  // 🔹 Page visit
-  window.gtag('event', 'page_view_custom', {
-    page: 'page3'
-  });
-
-  // 🔹 First visit
-  if (!localStorage.getItem("visited")) {
-    localStorage.setItem("visited", "true");
-    window.gtag('event', 'first_visit');
-  }
-
-  // 🔹 Time tracking start
-  const start = Date.now();
-
-  // 🔹 Scroll tracking
-  const handleScroll = () => {
-    const scroll = Math.round(
-      (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
-    );
-
-    if (scroll > 75 && !sessionStorage.getItem("scrolled75")) {
-  window.gtag('event', 'scroll_75');
-  sessionStorage.setItem("scrolled75", "true");
-}
-  };
-
-  window.addEventListener('scroll', handleScroll);
-
-  // 🔹 When leaving page
-  return () => {
-    const timeSpent = Math.round((Date.now() - start) / 1000);
-
-    window.gtag('event', 'time_spent', {
-      value: timeSpent
+    window.gtag('event', 'Page 3 - Step Changed', {
+      step_name: stepNames[step] || `Step ${step}`
     });
 
-    window.removeEventListener('scroll', handleScroll);
-  };
-}, []);
+    if (step === 3) {
+      window.gtag('event', 'Page 3 - Reached Final Message');
+    }
+  }, [step]);
+
+  // 🔹 Page 3 opened (fires once)
+  useEffect(() => {
+    if (!window.gtag) return;
+
+    window.gtag('event', 'page_view', { page_title: 'Page 3 - Proposal' });
+
+    // 🔹 First ever visit to the entire site
+    if (!localStorage.getItem("visited")) {
+      localStorage.setItem("visited", "true");
+      window.gtag('event', 'First Time Visitor');
+    }
+
+    const start = Date.now();
+
+    // 🔹 Scroll tracking (fires once)
+    const handleScroll = () => {
+      const scrollableHeight = document.body.scrollHeight - window.innerHeight;
+      if (scrollableHeight <= 0) return;
+
+      const scroll = Math.round((window.scrollY / scrollableHeight) * 100);
+
+      if (scroll > 75 && !sessionStorage.getItem("scrolled75_page3")) {
+        window.gtag('event', 'Page 3 - Scrolled 75%');
+        sessionStorage.setItem("scrolled75_page3", "true");
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      const timeSpent = Math.round((Date.now() - start) / 1000);
+      window.gtag('event', 'Page 3 - Time Spent', { value: timeSpent });
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  const [noHoverCount, setNoHoverCount] = useState(0);
   const [noPos, setNoPos] = useState({ x: 0, y: 0 });
 
   const handleNoHover = () => {
+    const newCount = noHoverCount + 1;
+    setNoHoverCount(newCount);
+    if (window.gtag) window.gtag('event', 'Page 3 - Tried Clicking No', { attempt_number: newCount });
     const sideX = Math.random() > 0.5 ? 1 : -1;
     const sideY = Math.random() > 0.5 ? 1 : -1;
     const newX = sideX * (Math.random() * 80 + 80);
@@ -91,10 +87,10 @@ useEffect(() => {
   return (
     <div className="page3-container">
       <AnimatePresence mode="wait">
-        
+
         {/* Step 1: The Ultimate Proposal */}
         {step === 1 && (
-          <motion.div 
+          <motion.div
             key="proposal"
             className="proposal-box glass-card"
             variants={containerVariants}
@@ -106,11 +102,14 @@ useEffect(() => {
             <h1 className="romantic-heading" style={{ fontSize: '4.5rem', marginBottom: '40px' }}>
               Will you make me your forever in every lifetime?
             </h1>
-            
+
             <div className="proposal-actions">
-              <motion.button 
+              <motion.button
                 className="btn btn-yes pulse-btn"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  if (window.gtag) window.gtag('event', 'Page 3 - Clicked YES to Proposal');
+                  setStep(2);
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{ fontSize: '1.5rem', padding: '15px 40px', marginRight: '20px' }}
@@ -118,7 +117,7 @@ useEffect(() => {
                 YES! ♥️
               </motion.button>
 
-              <motion.button 
+              <motion.button
                 className="btn btn-no evasive-btn"
                 onMouseEnter={handleNoHover}
                 onTouchStart={handleNoHover}
@@ -135,7 +134,7 @@ useEffect(() => {
 
         {/* Step 2: The Celebration & Video */}
         {step === 2 && (
-          <motion.div 
+          <motion.div
             key="celebration"
             className="celebration-box glass-card"
             variants={celebrationVariants}
@@ -147,16 +146,17 @@ useEffect(() => {
             <h2 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '2.2rem', margin: '20px 0' }}>
               DID YOU REALLY JUST SAID YESSSS???? WOHOOOOO!!! 😍🥳
             </h2>
-            
+
             <div className="video-container glowing-video-box">
-              <video 
-                src={`/videos/${finalVideo}`} 
-                controls 
-                autoPlay 
-                loop 
+              <video
+                src={`/videos/${finalVideo}`}
+                controls
+                autoPlay
+                loop
                 playsInline
                 preload="auto"
                 style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain', borderRadius: '15px', display: 'block' }}
+                onPlay={() => { if (window.gtag) window.gtag('event', 'Page 3 - Video Started Playing'); }}
               />
             </div>
 
@@ -164,9 +164,12 @@ useEffect(() => {
               So now lets seal it forever with a kiss... 💋
             </p>
 
-            <motion.button 
+            <motion.button
               className="btn btn-yes"
-              onClick={() => setStep(3)}
+              onClick={() => {
+                if (window.gtag) window.gtag('event', 'Page 3 - Clicked Sealed Button');
+                setStep(3);
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               style={{ fontSize: '1.5rem', padding: '15px 60px', marginTop: '10px' }}
@@ -178,7 +181,7 @@ useEffect(() => {
 
         {/* Step 3: The Carousel & Final Message */}
         {step === 3 && (
-          <motion.div 
+          <motion.div
             key="finale"
             className="finale-section"
             initial={{ opacity: 0, y: 20 }}
@@ -186,7 +189,7 @@ useEffect(() => {
             style={{ width: '100%', minHeight: 'auto', padding: '10px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
           >
             <audio src={`/audio/${carouselMusic}`} autoPlay loop playsInline />
-            
+
             <div className="carousel-wrapper">
               <div className="carousel-track">
                 {/* Double the array for seamless infinite scrolling */}
@@ -198,7 +201,7 @@ useEffect(() => {
               </div>
             </div>
 
-            <motion.div 
+            <motion.div
               className="final-text-box glass-card"
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -206,16 +209,19 @@ useEffect(() => {
               style={{ maxWidth: '800px', marginTop: '20px', padding: '20px 40px' }}
             >
               <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.6rem', lineHeight: '1.8', color: '#fff' }}>
-                This is how we will live together forever happily, lovingly, candidly without thinking about the world.<br/><br/>
-                Thank you so much for choosing me as your life partner forever, Meri Maalkin 😙❤️<br/><br/>
+                This is how we will live together forever happily, lovingly, candidly without thinking about the world.<br /><br />
+                Thank you so much for choosing me as your life partner forever, Meri Maalkin 😙❤️<br /><br />
                 <span style={{ fontSize: '1.2rem', color: '#ffb6c1' }}>Ohh yaa I forgot , the access code is "Subhyas Forever"🧿</span>
               </p>
             </motion.div>
 
-            <button 
-              className="btn btn-back" 
+            <button
+              className="btn btn-back"
               style={{ alignSelf: 'flex-end', marginTop: '40px', marginRight: '30px', zIndex: 1000 }}
-              onClick={onGoBack}
+              onClick={() => {
+                if (window.gtag) window.gtag('event', 'Page 3 - Clicked Go Back');
+                onGoBack();
+              }}
             >
               Go Back
             </button>

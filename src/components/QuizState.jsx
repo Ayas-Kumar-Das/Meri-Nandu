@@ -10,6 +10,18 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
   const inputRefs = useRef({});
   const containerRef = useRef(null);
   const blockRefs = useRef({});
+  const wrongAttemptsRef = useRef({});
+
+  // 🔹 Track quiz started + time
+  useEffect(() => {
+    if (!window.gtag) return;
+    window.gtag('event', 'Quiz - Started');
+    const startTime = Date.now();
+    return () => {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      window.gtag('event', 'Quiz - Time Spent', { value: timeSpent });
+    };
+  }, []);
 
   const getInputCount = (q) => {
     if (q.type === 'single') return 1;
@@ -50,6 +62,15 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
       setCompletedSet(prev => new Set([...prev, q.id]));
       launchConfetti(q.confetti);
 
+      // 🔹 Track correct answer
+      if (window.gtag) {
+        window.gtag('event', 'Quiz - Answered Correct', {
+          question_number: q.id,
+          question_text: q.text.substring(0, 60),
+          wrong_attempts: wrongAttemptsRef.current[q.id] || 0
+        });
+      }
+
       setTimeout(() => {
         if (index < 4) {
           const nextIdx = index + 1;
@@ -62,11 +83,24 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
             setCurrentIndex(5);
           }, 300);
         } else if (index === 5) {
+          // 🔹 Track quiz completed
+          if (window.gtag) window.gtag('event', 'Quiz - All Questions Completed');
           setTimeout(() => onComplete(), 1500);
         }
       }, 1200);
     } else {
       setResults(prev => ({ ...prev, [q.id]: { correct: false, msg: q.wrongMsg } }));
+
+      // 🔹 Track wrong answer
+      wrongAttemptsRef.current[q.id] = (wrongAttemptsRef.current[q.id] || 0) + 1;
+      if (window.gtag) {
+        window.gtag('event', 'Quiz - Answered Wrong', {
+          question_number: q.id,
+          question_text: q.text.substring(0, 60),
+          attempt_number: wrongAttemptsRef.current[q.id]
+        });
+      }
+
       // Shake the question block
       const block = blockRefs.current[q.id];
       if (block) {
