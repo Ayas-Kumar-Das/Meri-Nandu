@@ -1,10 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mainPhotos } from '../data/media';
 
 export default function Page2({ visible, isPulling, onGoNext }) {
   const [selectedImage, setSelectedImage] = useState(null);
+  useEffect(() => {
+  if (!window.gtag || !visible) return;
 
+  // 🔹 Page view
+  window.gtag('event', 'page_view', {
+    page_title: 'page2'
+  });
+
+  // 🔹 Entry
+  window.gtag('event', 'entered_page2');
+
+  const startTime = Date.now();
+
+  let maxScroll = 0;
+
+  const handleScroll = () => {
+    const scroll = Math.round(
+      (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
+    );
+
+    if (scroll > maxScroll) {
+      maxScroll = scroll;
+
+      if (scroll > 25) window.gtag('event', 'scroll_25_page2');
+      if (scroll > 50) window.gtag('event', 'scroll_50_page2');
+      if (scroll > 75) window.gtag('event', 'scroll_75_page2');
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll);
+
+  return () => {
+    const timeSpent = Math.round((Date.now() - startTime) / 1000);
+
+    window.gtag('event', 'time_spent_page2', {
+      value: timeSpent
+    });
+
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, [visible]);
   if (!visible && !isPulling) return null;
   const animateState = visible ? "visible" : "hidden";
 
@@ -60,7 +100,12 @@ export default function Page2({ visible, isPulling, onGoNext }) {
             transition={visible ? { delay: 0, duration: 0.8, type: 'spring' } : { duration: 0 }}
             style={{ marginTop: '80px' }}
             whileHover={{ scale: 1.1, zIndex: 50, rotate: 0 }}
-            onClick={() => setSelectedImage(p)}
+            onClick={() => {
+  if (window.gtag) {
+    window.gtag('event', 'image_clicked_page2');
+  }
+  setSelectedImage(p);
+}}
           >
             <div className="polaroid-clip" />
             <div className="polaroid-photo">
@@ -175,7 +220,12 @@ export default function Page2({ visible, isPulling, onGoNext }) {
             transition={visible ? { delay: 0.3, duration: 0.8, type: 'spring' } : { duration: 0 }}
             style={{ marginTop: '80px' }}
             whileHover={{ scale: 1.1, zIndex: 50, rotate: 0 }}
-            onClick={() => setSelectedImage(p)}
+            onClick={() => {
+  if (window.gtag) {
+    window.gtag('event', 'image_clicked_page2');
+  }
+  setSelectedImage(p);
+}}
           >
             <div className="polaroid-clip" />
             <div className="polaroid-photo">

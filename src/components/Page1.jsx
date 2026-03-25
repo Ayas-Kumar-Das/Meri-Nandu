@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import QuizState from './QuizState';
 import TeddyScene from './TeddyScene';
@@ -15,6 +15,28 @@ export default function Page1({
 }) {
   const [codeError, setCodeError] = useState(false);
   const codeInputRef = useRef(null);
+  useEffect(() => {
+  if (!window.gtag) return;
+
+  // 🔹 Page1 opened
+  window.gtag('event', 'page_view', {
+    page_title: 'page1'
+  });
+
+  // 🔹 Track current state
+  window.gtag('event', 'state_view_page1', {
+    state: currentState
+  });
+
+}, []);
+useEffect(() => {
+  if (!window.gtag) return;
+
+  window.gtag('event', 'state_change_page1', {
+    state: currentState
+  });
+
+}, [currentState]);
 
   const checkSpecialCode = useCallback(() => {
     const val = codeInputRef.current?.value || '';

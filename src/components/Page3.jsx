@@ -1,9 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { extraPhotos, finalVideo, carouselMusic } from '../data/media';
 
 export default function Page3({ visible, onGoBack }) {
   const [step, setStep] = useState(1);
+  useEffect(() => {
+  if (!window.gtag) return;
+
+  let pageName = "";
+
+  if (step === 1) pageName = "page1";
+  if (step === 2) pageName = "page2";
+  if (step === 3) pageName = "page3";
+
+  // 🔹 Track page view
+  window.gtag('event', 'page_view', {
+    page: pageName
+  });
+
+  // 🔹 Special: final page
+  if (step === 3) {
+    window.gtag('event', 'reached_final');
+  }
+
+}, [step]);
+useEffect(() => {
+  if (!window.gtag) return;
+
+  // 🔹 Page visit
+  window.gtag('event', 'page_view_custom', {
+    page: 'page3'
+  });
+
+  // 🔹 First visit
+  if (!localStorage.getItem("visited")) {
+    localStorage.setItem("visited", "true");
+    window.gtag('event', 'first_visit');
+  }
+
+  // 🔹 Time tracking start
+  const start = Date.now();
+
+  // 🔹 Scroll tracking
+  const handleScroll = () => {
+    const scroll = Math.round(
+      (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
+    );
+
+    if (scroll > 75 && !sessionStorage.getItem("scrolled75")) {
+  window.gtag('event', 'scroll_75');
+  sessionStorage.setItem("scrolled75", "true");
+}
+  };
+
+  window.addEventListener('scroll', handleScroll);
+
+  // 🔹 When leaving page
+  return () => {
+    const timeSpent = Math.round((Date.now() - start) / 1000);
+
+    window.gtag('event', 'time_spent', {
+      value: timeSpent
+    });
+
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, []);
   const [noPos, setNoPos] = useState({ x: 0, y: 0 });
 
   const handleNoHover = () => {
