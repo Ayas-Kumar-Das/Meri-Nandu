@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Detect mobile/touch devices
+const isMobile = () =>
+  typeof window !== 'undefined' &&
+  (window.matchMedia('(max-width: 900px)').matches || 'ontouchstart' in window);
+
 export default function CustomCursor({ mode }) {
   const cursorRef = useRef(null);
   const trailContainerRef = useRef(null);
   const trailCountRef = useRef(0);
   const [trailEnabled, setTrailEnabled] = useState(false);
+
+  // Don't render anything on mobile
+  if (isMobile()) return null;
 
   useEffect(() => {
     setTrailEnabled(mode === 'heart');
