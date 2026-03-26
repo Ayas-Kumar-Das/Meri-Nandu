@@ -909,11 +909,13 @@ a, button, input { cursor: none; }
   position: relative;
   z-index: 3;
   cursor: pointer;
-  transition: transform 0.2s;
+  pointer-events: auto;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .polaroid-frame:hover {
-  transform: scale(1.05) !important;
+  transform: scale(1.08) rotate(0deg) !important;
   z-index: 10;
+  box-shadow: 0 12px 35px rgba(255, 107, 138, 0.3);
 }
 
 .polaroid-clip {
