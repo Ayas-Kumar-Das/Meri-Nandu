@@ -11,13 +11,15 @@ const ConfettiCanvas = forwardRef(function ConfettiCanvas(_, ref) {
     let animationId;
     let particles = [];
     let running = false;
-    
+
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
     resize();
     window.addEventListener('resize', resize);
+
+    const isMobile = () => window.innerWidth <= 900;
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -26,7 +28,7 @@ const ConfettiCanvas = forwardRef(function ConfettiCanvas(_, ref) {
         p.vy += p.gravity;
         p.y += p.vy;
         p.rot += p.rotV;
-        p.opacity -= 0.015;
+        p.opacity -= p.fadeRate;
         if (p.y > canvas.height + 30 || p.opacity <= 0) return false;
         ctx.save();
         ctx.translate(p.x, p.y);
@@ -47,18 +49,22 @@ const ConfettiCanvas = forwardRef(function ConfettiCanvas(_, ref) {
 
     engineRef.current = {
       launch: (emojis, count = 20) => {
-        for (let i = 0; i < count; i++) {
+        const mobile = isMobile();
+        // Scale for mobile: fewer particles, slower speed
+        const actualCount = mobile ? Math.min(count, 10) : count;
+        for (let i = 0; i < actualCount; i++) {
           particles.push({
             emoji: emojis[Math.floor(Math.random() * emojis.length)],
             x: window.innerWidth * 0.2 + Math.random() * window.innerWidth * 0.6,
             y: window.innerHeight + 20,
-            vx: (Math.random() - 0.5) * 6,
-            vy: -(8 + Math.random() * 6),
-            size: 24 + Math.random() * 16,
+            vx: (Math.random() - 0.5) * (mobile ? 3 : 5),
+            vy: -(mobile ? (5 + Math.random() * 3) : (18 + Math.random() * 6)), // Massive initial up
+            size: mobile ? (20 + Math.random() * 10) : (24 + Math.random() * 16),
             rot: Math.random() * 360,
-            rotV: (Math.random() - 0.5) * 8,
+            rotV: (Math.random() - 0.5) * (mobile ? 4 : 6),
             opacity: 1,
-            gravity: 0.2 + Math.random() * 0.1
+            gravity: mobile ? (0.08 + Math.random() * 0.04) : (1.8 + Math.random() * 0.5),
+            fadeRate: mobile ? 0.008 : 0.035
           });
         }
         if (!running) {
@@ -89,3 +95,4 @@ const ConfettiCanvas = forwardRef(function ConfettiCanvas(_, ref) {
 });
 
 export default ConfettiCanvas;
+

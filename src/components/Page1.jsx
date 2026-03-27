@@ -23,7 +23,7 @@ export default function Page1({
     const startTime = Date.now();
     return () => {
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
-      window.gtag('event', 'Page 1 - Time Spent', { value: timeSpent });
+      window.gtag('event', 'page_1_time_spent', { value: timeSpent });
     };
   }, []);
 
@@ -41,14 +41,14 @@ export default function Page1({
       'teddy-quick': 'Teddy Animation (Code Shortcut)',
     };
 
-    window.gtag('event', 'Page 1 - Screen Changed', {
+    window.gtag('event', 'page_1_screen_changed', {
       screen_name: screenNames[currentState] || currentState
     });
   }, [currentState]);
 
   // 🔹 Helper to track button clicks
   const trackClick = (label) => {
-    if (window.gtag) window.gtag('event', 'Page 1 - Button Clicked', { button_name: label });
+    if (window.gtag) window.gtag('event', 'page_1_button_clicked', { button_name: label });
   };
 
   const checkSpecialCode = useCallback(() => {

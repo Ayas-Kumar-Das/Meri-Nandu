@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 
 export default function FloatingBackground({ type }) {
   const containerRef = useRef(null);
@@ -58,9 +59,12 @@ export default function FloatingBackground({ type }) {
   }, [type]);
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
       className={type === 'questions' ? 'floating-bg' : 'hearts-bg'}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.2, duration: 1 }}
     />
   );
 }

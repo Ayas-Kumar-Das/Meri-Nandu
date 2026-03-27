@@ -15,11 +15,11 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
   // 🔹 Track quiz started + time
   useEffect(() => {
     if (!window.gtag) return;
-    window.gtag('event', 'Quiz - Started');
+    window.gtag('event', 'quiz_started');
     const startTime = Date.now();
     return () => {
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
-      window.gtag('event', 'Quiz - Time Spent', { value: timeSpent });
+      window.gtag('event', 'quiz_time_spent', { value: timeSpent });
     };
   }, []);
 
@@ -64,7 +64,7 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
 
       // 🔹 Track correct answer
       if (window.gtag) {
-        window.gtag('event', 'Quiz - Answered Correct', {
+        window.gtag('event', 'quiz_answered_correct', {
           question_number: q.id,
           question_text: q.text.substring(0, 60),
           wrong_attempts: wrongAttemptsRef.current[q.id] || 0
@@ -84,17 +84,17 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
           }, 300);
         } else if (index === 5) {
           // 🔹 Track quiz completed
-          if (window.gtag) window.gtag('event', 'Quiz - All Questions Completed');
+          if (window.gtag) window.gtag('event', 'quiz_all_questions_completed');
           setTimeout(() => onComplete(), 1500);
         }
-      }, 1200);
+      }, 1800);
     } else {
       setResults(prev => ({ ...prev, [q.id]: { correct: false, msg: q.wrongMsg } }));
 
       // 🔹 Track wrong answer
       wrongAttemptsRef.current[q.id] = (wrongAttemptsRef.current[q.id] || 0) + 1;
       if (window.gtag) {
-        window.gtag('event', 'Quiz - Answered Wrong', {
+        window.gtag('event', 'quiz_answered_wrong', {
           question_number: q.id,
           question_text: q.text.substring(0, 60),
           attempt_number: wrongAttemptsRef.current[q.id]
@@ -121,60 +121,60 @@ export default function QuizState({ launchConfetti, clearConfetti, onComplete })
 
       {/* Question blocks */}
       <AnimatePresence>
-      {renderedQuestions.map((qIdx) => {
-        const q = questions[qIdx];
-        if (!q) return null;
-        const result = results[q.id];
-        const isCompleted = completedSet.has(q.id);
-        const inputCount = getInputCount(q);
+        {renderedQuestions.map((qIdx) => {
+          const q = questions[qIdx];
+          if (!q) return null;
+          const result = results[q.id];
+          const isCompleted = completedSet.has(q.id);
+          const inputCount = getInputCount(q);
 
-        return (
-          <motion.div
-            key={q.id}
-            ref={(el) => { blockRefs.current[q.id] = el; }}
-            className={`question-block ${isCompleted ? 'completed' : ''} ${q.isFinal ? 'final-question' : ''}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }}
-          >
-            <div style={{ marginBottom: 10, textAlign: q.id === 6 ? 'center' : 'left' }}>
-              {q.id !== 6 && <span className="q-number">{q.id}</span>}
-              <span className="q-text">{q.text}</span>
-            </div>
-            {q.hint && <p className="q-hint">{q.hint}</p>}
-            <div className="answer-row">
-              {Array.from({ length: inputCount }).map((_, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { inputRefs.current[`${q.id}-${i}`] = el; }}
-                  type="text"
-                  className="answer-input"
-                  placeholder={q.type === 'single' ? q.placeholder : q.placeholders[i]}
-                  autoComplete="off"
+          return (
+            <motion.div
+              key={q.id}
+              ref={(el) => { blockRefs.current[q.id] = el; }}
+              className={`question-block solid-glass-page1 ${isCompleted ? 'completed' : ''} ${q.isFinal ? 'final-question' : ''}`}
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0, transition: { duration: 0.5, type: 'spring', bounce: 0.4 } }}
+            >
+              <div style={{ marginBottom: 10, textAlign: q.id === 6 ? 'center' : 'left' }}>
+                {q.id !== 6 && <span className="q-number">{q.id}</span>}
+                <span className="q-text">{q.text}</span>
+              </div>
+              {q.hint && <p className="q-hint">{q.hint}</p>}
+              <div className="answer-row">
+                {Array.from({ length: inputCount }).map((_, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { inputRefs.current[`${q.id}-${i}`] = el; }}
+                    type="text"
+                    className="answer-input"
+                    placeholder={q.type === 'single' ? q.placeholder : q.placeholders[i]}
+                    autoComplete="off"
+                    disabled={isCompleted}
+                    onKeyDown={(e) => e.key === 'Enter' && submitAnswer(qIdx)}
+                  />
+                ))}
+                <button
+                  className="btn btn-submit"
+                  onClick={() => submitAnswer(qIdx)}
                   disabled={isCompleted}
-                  onKeyDown={(e) => e.key === 'Enter' && submitAnswer(qIdx)}
-                />
-              ))}
-              <button
-                className="btn btn-submit"
-                onClick={() => submitAnswer(qIdx)}
-                disabled={isCompleted}
-              >
-                Submit
-              </button>
+                >
+                  Submit
+                </button>
+                {result && (
+                  <span className={`result-icon ${result.correct ? 'correct' : ''}`}>
+                    {result.correct ? '❤️' : '⚠️'}
+                  </span>
+                )}
+              </div>
               {result && (
-                <span className={`result-icon ${result.correct ? 'correct' : ''}`}>
-                  {result.correct ? '❤️' : '⚠️'}
-                </span>
+                <p className={`result-msg ${result.correct ? 'correct' : 'wrong'}`}>
+                  {result.msg}
+                </p>
               )}
-            </div>
-            {result && (
-              <p className={`result-msg ${result.correct ? 'correct' : 'wrong'}`}>
-                {result.msg}
-              </p>
-            )}
-          </motion.div>
-        );
-      })}
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
     </div>
   );

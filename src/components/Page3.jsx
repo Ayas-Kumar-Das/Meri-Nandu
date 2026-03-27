@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { extraPhotos, finalVideo, carouselMusic } from '../data/media';
 
 export default function Page3({ visible, onGoBack }) {
   const [step, setStep] = useState(1);
+
   // 🔹 Track which step the user is on inside Page 3
   useEffect(() => {
     if (!window.gtag) return;
@@ -14,12 +15,26 @@ export default function Page3({ visible, onGoBack }) {
       3: 'Final Carousel & Message',
     };
 
-    window.gtag('event', 'Page 3 - Step Changed', {
+    window.gtag('event', 'page_3_step_changed', {
       step_name: stepNames[step] || `Step ${step}`
     });
 
     if (step === 3) {
-      window.gtag('event', 'Page 3 - Reached Final Message');
+      window.gtag('event', 'page_3_reached_final_message');
+    }
+  }, [step]);
+
+  // 🔹 Bulletproof Delayed AutoPlay for Video
+  // Guaranteed not to stutter by waiting until all React framer-motion entrance animations finish (1.2s delay)
+  const videoRef = useRef(null);
+  useEffect(() => {
+    if (step === 2 && videoRef.current) {
+      const timer = setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.play().catch(e => console.log('Autoplay blocked:', e));
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [step]);
 
@@ -32,7 +47,7 @@ export default function Page3({ visible, onGoBack }) {
     // 🔹 First ever visit to the entire site
     if (!localStorage.getItem("visited")) {
       localStorage.setItem("visited", "true");
-      window.gtag('event', 'First Time Visitor');
+      window.gtag('event', 'first_time_visitor');
     }
 
     const start = Date.now();
@@ -45,7 +60,7 @@ export default function Page3({ visible, onGoBack }) {
       const scroll = Math.round((window.scrollY / scrollableHeight) * 100);
 
       if (scroll > 75 && !sessionStorage.getItem("scrolled75_page3")) {
-        window.gtag('event', 'Page 3 - Scrolled 75%');
+        window.gtag('event', 'page_3_scrolled_75');
         sessionStorage.setItem("scrolled75_page3", "true");
       }
     };
@@ -54,7 +69,7 @@ export default function Page3({ visible, onGoBack }) {
 
     return () => {
       const timeSpent = Math.round((Date.now() - start) / 1000);
-      window.gtag('event', 'Page 3 - Time Spent', { value: timeSpent });
+      window.gtag('event', 'page_3_time_spent', { value: timeSpent });
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
@@ -64,7 +79,7 @@ export default function Page3({ visible, onGoBack }) {
   const handleNoHover = () => {
     const newCount = noHoverCount + 1;
     setNoHoverCount(newCount);
-    if (window.gtag) window.gtag('event', 'Page 3 - Tried Clicking No', { attempt_number: newCount });
+    if (window.gtag) window.gtag('event', 'page_3_tried_clicking_no', { attempt_number: newCount });
     const sideX = Math.random() > 0.5 ? 1 : -1;
     const sideY = Math.random() > 0.5 ? 1 : -1;
     const newX = sideX * (Math.random() * 80 + 80);
@@ -75,13 +90,13 @@ export default function Page3({ visible, onGoBack }) {
   const containerVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
+    exit: { opacity: 0, y: -10, transition: { duration: 0.6, ease: "easeInOut" } }
   };
 
   const celebrationVariants = {
-    hidden: { opacity: 0, y: -50 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 15, stiffness: 100 } },
-    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.6, ease: "easeInOut" } }
+    hidden: { scale: 0.9, y: -20 },
+    visible: { scale: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.2 } },
+    exit: { scale: 0.95, transition: { duration: 0.5, ease: "easeInOut" } }
   };
 
   return (
@@ -107,12 +122,12 @@ export default function Page3({ visible, onGoBack }) {
               <motion.button
                 className="btn btn-yes pulse-btn"
                 onClick={() => {
-                  if (window.gtag) window.gtag('event', 'Page 3 - Clicked YES to Proposal');
+                  if (window.gtag) window.gtag('event', 'page_3_clicked_yes_to_proposal');
                   setStep(2);
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                style={{ fontSize: '1.5rem', padding: '15px 40px', marginRight: '20px' }}
+                style={{ fontSize: '1.5rem', padding: '15px 40px' }}
               >
                 YES! ♥️
               </motion.button>
@@ -149,14 +164,17 @@ export default function Page3({ visible, onGoBack }) {
 
             <div className="video-container glowing-video-box">
               <video
+                ref={videoRef}
+                key={`vid-${finalVideo}`}
                 src={`/videos/${finalVideo}`}
                 controls
-                autoPlay
+                muted
                 loop
                 playsInline
                 preload="auto"
-                style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain', borderRadius: '15px', display: 'block' }}
-                onPlay={() => { if (window.gtag) window.gtag('event', 'Page 3 - Video Started Playing'); }}
+                onLoadedData={(e) => { e.target.play().catch(() => { }); }}
+                style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain', borderRadius: '15px', display: 'block', transform: 'translateZ(0)', willChange: 'transform' }}
+                onPlay={() => { if (window.gtag) window.gtag('event', 'page_3_video_started_playing'); }}
               />
             </div>
 
@@ -167,7 +185,7 @@ export default function Page3({ visible, onGoBack }) {
             <motion.button
               className="btn btn-yes"
               onClick={() => {
-                if (window.gtag) window.gtag('event', 'Page 3 - Clicked Sealed Button');
+                if (window.gtag) window.gtag('event', 'page_3_clicked_sealed_button');
                 setStep(3);
               }}
               whileHover={{ scale: 1.05 }}
@@ -203,9 +221,9 @@ export default function Page3({ visible, onGoBack }) {
 
             <motion.div
               className="final-text-box glass-card"
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 1, duration: 1.2 }}
+              initial={{ y: 50, scale: 0.95 }}
+              animate={{ y: 0, scale: 1 }}
+              transition={{ delay: 1, duration: 0.8, type: 'spring' }}
               style={{ maxWidth: '800px', marginTop: '20px', padding: '20px 40px' }}
             >
               <p style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.6rem', lineHeight: '1.8', color: '#fff' }}>
@@ -219,7 +237,7 @@ export default function Page3({ visible, onGoBack }) {
               className="btn btn-back"
               style={{ alignSelf: 'flex-end', marginTop: '40px', marginRight: '30px', zIndex: 1000 }}
               onClick={() => {
-                if (window.gtag) window.gtag('event', 'Page 3 - Clicked Go Back');
+                if (window.gtag) window.gtag('event', 'page_3_clicked_go_back');
                 onGoBack();
               }}
             >

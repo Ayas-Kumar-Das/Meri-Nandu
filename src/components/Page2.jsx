@@ -1,15 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mainPhotos } from '../data/media';
 
 export default function Page2({ visible, isPulling, onGoNext }) {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [isPromptExiting, setIsPromptExiting] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 900);
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   useEffect(() => {
     if (!window.gtag || !visible) return;
 
     // 🔹 Page opened
     window.gtag('event', 'page_view', { page_title: 'Page 2 - Love Letter' });
-    window.gtag('event', 'Page 2 - Opened');
+    window.gtag('event', 'page_2_opened');
 
     const startTime = Date.now();
 
@@ -27,19 +36,19 @@ export default function Page2({ visible, isPulling, onGoNext }) {
 
       if (scroll > 25 && !scrolledPast25) {
         scrolledPast25 = true;
-        window.gtag('event', 'Page 2 - Scrolled 25%');
+        window.gtag('event', 'page_2_scrolled_25');
       }
       if (scroll > 50 && !scrolledPast50) {
         scrolledPast50 = true;
-        window.gtag('event', 'Page 2 - Scrolled 50%');
+        window.gtag('event', 'page_2_scrolled_50');
       }
       if (scroll > 75 && !scrolledPast75) {
         scrolledPast75 = true;
-        window.gtag('event', 'Page 2 - Scrolled 75%');
+        window.gtag('event', 'page_2_scrolled_75');
       }
       if (scroll > 95 && !scrolledPast100) {
         scrolledPast100 = true;
-        window.gtag('event', 'Page 2 - Reached Bottom');
+        window.gtag('event', 'page_2_reached_bottom');
       }
     };
 
@@ -47,10 +56,30 @@ export default function Page2({ visible, isPulling, onGoNext }) {
 
     return () => {
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
-      window.gtag('event', 'Page 2 - Time Spent', { value: timeSpent });
+      window.gtag('event', 'page_2_time_spent', { value: timeSpent });
       window.removeEventListener('scroll', handleScroll);
     };
   }, [visible]);
+
+  // Memoize polaroid data so it only randomizes ONCE on mount, not on every click/render
+  const { leftPolaroids, rightPolaroids } = useMemo(() => {
+    const shuffled = [...mainPhotos].sort((a, b) => a.length - b.length + (Math.random() - 0.5) * 5);
+    return {
+      leftPolaroids: shuffled.slice(0, 20).map((filename, i) => ({
+        id: `left-${i}`,
+        filename,
+        customDelay: Math.random() * 0.5,
+        rotate: (Math.random() - 0.5) * 12
+      })),
+      rightPolaroids: shuffled.slice(20, 40).map((filename, i) => ({
+        id: `right-${i}`,
+        filename,
+        customDelay: Math.random() * 0.5,
+        rotate: (Math.random() - 0.5) * 12
+      }))
+    };
+  }, []); // empty deps = only computed once
+
   if (!visible && !isPulling) return null;
   const animateState = visible ? "visible" : "hidden";
 
@@ -72,43 +101,30 @@ export default function Page2({ visible, isPulling, onGoNext }) {
     visible: { opacity: 1, y: 0, transition: { duration: 1, ease: 'easeOut' } }
   };
 
-  // Pseudo-shuffle to avoid clustering similar photos
-  const shuffledPhotos = [...mainPhotos].sort((a, b) => a.length - b.length + (Math.random() - 0.5) * 5);
-
-  const leftPolaroids = shuffledPhotos.slice(0, 20).map((filename, i) => ({
-    id: `left-${i}`,
-    filename,
-    customDelay: Math.random() * 0.5,
-    rotate: (Math.random() - 0.5) * 12
-  }));
-
-  const rightPolaroids = shuffledPhotos.slice(20, 40).map((filename, i) => ({
-    id: `right-${i}`,
-    filename,
-    customDelay: Math.random() * 0.5,
-    rotate: (Math.random() - 0.5) * 12
-  }));
-
   return (
-    <div className="page2-scroll-wrapper">
+    <motion.div
+      className="page2-scroll-wrapper"
+      initial={false}
+      animate={{ opacity: isPromptExiting ? 0 : 1, scale: isPromptExiting ? 0.95 : 1 }}
+      transition={{ duration: 0.7, ease: "easeInOut" }}
+    >
       <div className="welcome-glow" />
 
       {/* Left Wire & Polaroids */}
       <div className="polaroid-sidebar left">
         <div className="polaroid-wire" />
-        {leftPolaroids.map((p, i) => (
+        {(isMobile ? [...leftPolaroids, ...leftPolaroids] : leftPolaroids).map((p, i) => (
           <motion.div
-            key={p.id}
-            layoutId={`frame-${p.id}`}
+            key={isMobile ? `${p.id}-${i < leftPolaroids.length ? 'a' : 'b'}` : p.id}
             className="polaroid-frame"
             initial={{ opacity: 0, y: -20, rotate: 0 }}
             animate={visible ? { opacity: 1, y: 0, rotate: p.rotate } : { opacity: 0, y: -20, rotate: 0 }}
-            transition={visible ? { delay: 0, duration: 0.8, type: 'spring' } : { duration: 0 }}
-            style={{ marginTop: '80px' }}
-            whileHover={{ scale: 1.1, zIndex: 50, rotate: 0 }}
+            transition={visible ? { delay: 0, duration: 0.6, type: 'spring', stiffness: 120, damping: 14 } : { duration: 0 }}
+            style={{ marginTop: isMobile ? '0' : '80px' }}
+            whileHover={{ scale: 1.08, zIndex: 50, rotate: 0, transition: { duration: 0.2 } }}
             onClick={() => {
               if (window.gtag) {
-                window.gtag('event', 'Page 2 - Photo Clicked');
+                window.gtag('event', 'page_2_photo_clicked');
               }
               setSelectedImage(p);
             }}
@@ -122,7 +138,7 @@ export default function Page2({ visible, isPulling, onGoNext }) {
       </div>
 
       {/* Middle Content */}
-      <div className="center-content" style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '800px', margin: '0 40px' }}>
+      <div className="center-content" style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
         <motion.div
           className="dark-glass-box"
           variants={letterVariants}
@@ -197,41 +213,51 @@ export default function Page2({ visible, isPulling, onGoNext }) {
           </motion.div>
         </motion.div>
 
-        <div className="page3-prompt" style={{ position: 'relative', zIndex: 60, marginTop: '30px', marginBottom: '100px', padding: '30px', background: 'rgba(255,107,138,0.1)', borderRadius: '20px', border: '1px solid rgba(255,138,171,0.3)', backdropFilter: 'blur(10px)', textAlign: 'center', width: '100%' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '1.8rem', marginBottom: '20px' }}>
-            So baby now I want to ask you a question...
-          </h3>
-          <motion.button
-            className="btn btn-yes pulse-btn"
-            style={{ padding: '15px 50px', fontSize: '1.3rem', margin: '0 auto' }}
-            onClick={() => {
-              if (window.gtag) window.gtag('event', 'Page 2 - Clicked Ok to Go to Page 3');
-              onGoNext();
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Ok!
-          </motion.button>
-        </div>
+        <AnimatePresence>
+          {!isPromptExiting && (
+            <motion.div
+              className="page3-prompt"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.4 } }}
+              style={{ position: 'relative', zIndex: 60, marginTop: '30px', marginBottom: '100px', padding: '30px', background: 'rgba(255,107,138,0.1)', borderRadius: '20px', border: '1px solid rgba(255,138,171,0.3)', backdropFilter: 'blur(10px)', textAlign: 'center', width: '100%' }}
+            >
+              <h3 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: '1.8rem', marginBottom: '20px' }}>
+                So baby now I want to ask you a question...
+              </h3>
+              <motion.button
+                className="btn btn-yes pulse-btn"
+                style={{ padding: '15px 50px', fontSize: '1.3rem', margin: '0 auto' }}
+                onClick={() => {
+                  if (window.gtag) window.gtag('event', 'page_2_clicked_ok_to_go_to_page_3');
+                  setIsPromptExiting(true);
+                  setTimeout(() => onGoNext(), 800);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Ok!
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Right Wire & Polaroids */}
       <div className="polaroid-sidebar right">
         <div className="polaroid-wire" />
-        {rightPolaroids.map((p, i) => (
+        {(isMobile ? [...rightPolaroids, ...rightPolaroids] : rightPolaroids).map((p, i) => (
           <motion.div
-            key={p.id}
-            layoutId={`frame-${p.id}`}
+            key={isMobile ? `${p.id}-${i < rightPolaroids.length ? 'a' : 'b'}` : p.id}
             className="polaroid-frame"
             initial={{ opacity: 0, y: -20, rotate: 0 }}
             animate={visible ? { opacity: 1, y: 0, rotate: p.rotate } : { opacity: 0, y: -20, rotate: 0 }}
-            transition={visible ? { delay: 0.3, duration: 0.8, type: 'spring' } : { duration: 0 }}
-            style={{ marginTop: '80px' }}
-            whileHover={{ scale: 1.1, zIndex: 50, rotate: 0 }}
+            transition={visible ? { delay: 0.3, duration: 0.6, type: 'spring', stiffness: 120, damping: 14 } : { duration: 0 }}
+            style={{ marginTop: isMobile ? '0' : '80px' }}
+            whileHover={{ scale: 1.08, zIndex: 50, rotate: 0, transition: { duration: 0.2 } }}
             onClick={() => {
               if (window.gtag) {
-                window.gtag('event', 'Page 2 - Photo Clicked');
+                window.gtag('event', 'page_2_photo_clicked');
               }
               setSelectedImage(p);
             }}
@@ -252,15 +278,18 @@ export default function Page2({ visible, isPulling, onGoNext }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             onClick={() => {
-            if (window.gtag) window.gtag('event', 'Page 2 - Photo Lightbox Closed');
-            setSelectedImage(null);
-          }}
+              if (window.gtag) window.gtag('event', 'page_2_photo_lightbox_closed');
+              setSelectedImage(null);
+            }}
           >
             <motion.div
               className="lightbox-content"
-              layoutId={`frame-${selectedImage.id}`}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25, mass: 0.8 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="polaroid-photo" style={{ background: 'transparent' }}>
@@ -270,6 +299,6 @@ export default function Page2({ visible, isPulling, onGoNext }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

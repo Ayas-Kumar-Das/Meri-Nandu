@@ -23,7 +23,7 @@ export default function TeddyScene({ mode, transitionToPage2, setCursorMode, set
   }, [mode]);
 
   function doPagePull() {
-    if (window.gtag) window.gtag('event', 'Teddy - Pulling Page to Reveal Page 2');
+    if (window.gtag) window.gtag('event', 'teddy_pulling_page_to_reveal_page_2');
     transitionToPage2();
   }
 
@@ -69,7 +69,7 @@ export default function TeddyScene({ mode, transitionToPage2, setCursorMode, set
     if (!teddy || !speech) return;
 
     // 🔹 Track teddy animation
-    if (window.gtag) window.gtag('event', 'Teddy - Animation Started (Code Shortcut)');
+    if (window.gtag) window.gtag('event', 'teddy_animation_started_code_shortcut');
 
     // Position bear off-screen right
     teddy.className = 'teddy-bear slide-from-right';
@@ -99,7 +99,7 @@ export default function TeddyScene({ mode, transitionToPage2, setCursorMode, set
     if (!teddy) return;
 
     // 🔹 Track teddy animation
-    if (window.gtag) window.gtag('event', 'Teddy - Animation Started (After Quiz)');
+    if (window.gtag) window.gtag('event', 'teddy_animation_started_after_quiz');
 
     // Walk in
     schedule(() => teddy.classList.add('walk-in'), 200);

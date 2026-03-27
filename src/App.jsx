@@ -39,7 +39,7 @@ export default function App() {
     }
     if (window.gtag && page > 1) {
       const pageNames = { 2: 'Page 2 - Love Letter', 3: 'Page 3 - Proposal' };
-      window.gtag('event', 'Navigation - Moved to Page', {
+      window.gtag('event', 'navigation_moved_to_page', {
         page_name: pageNames[page] || `Page ${page}`
       });
     }
@@ -76,8 +76,8 @@ export default function App() {
             style={{ zIndex: 10 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <FloatingBackground type="hearts" />
             <Page2 visible={page === 2} isPulling={page1Pulling} onGoNext={() => { setPage(3); window.scrollTo(0, 0); }} />
@@ -91,8 +91,8 @@ export default function App() {
             style={{ zIndex: 20 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            exit={{ opacity: 0, transition: { duration: 1.5, ease: "easeInOut" } }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
           >
             <FloatingBackground type="sparkles" />
             <Page3 visible={page === 3} onGoBack={() => { 
